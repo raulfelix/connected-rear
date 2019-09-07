@@ -15,6 +15,10 @@ class User extends Model {
     return this.belongsToMany('App/Models/Tag').pivotTable('user_tag')
   }
 
+  static get hidden () {
+    return ['password']
+  }
+
   static boot () {
     super.boot()
 

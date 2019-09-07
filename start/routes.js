@@ -29,7 +29,8 @@ Route.post('/signup', 'UserController.signup')
 Route.post('/login', 'UserController.login')
 Route.post('/logout', 'UserController.logout')
 
-Route.post('/user/profile', 'UserController.updateProfile').middleware('auth')
+Route.post('/user/profile', 'UserController.createProfile').middleware('auth')
+Route.put('/user/profile', 'UserController.updateProfile').middleware('auth')
 Route.get('/user/profile', 'UserController.profile').middleware('auth')
 
 //
@@ -43,8 +44,12 @@ Route.get('/projects/recent', 'ProjectsController.recent')
 Route.get('/projects/user', 'ProjectsController.byUser').middleware('auth')
 Route.post('/project', 'ProjectsController.create').middleware('auth')
 
-
 //
 // tags
 Route.get('/tags', 'TagsController.find')
 Route.post('/tags', 'TagsController.create')
+
+
+// ally routes
+Route.get('login/google', 'SocialController.redirect')
+Route.get('authenticated/google', 'SocialController.callback')

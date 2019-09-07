@@ -16,11 +16,11 @@ class UserController {
       user.type = type
       await user.save()
 
-      const profile = new Profile();
-      profile.user_id = user.id
-      profile.first_name = ''
-      profile.last_name = ''
-      await profile.save()
+      // const profile = new Profile();
+      // profile.user_id = user.id
+      // profile.first_name = ''
+      // profile.last_name = ''
+      // await profile.save()
 
       return response.json({
         status: 'success',
@@ -39,8 +39,11 @@ class UserController {
     try {
       const { email, password } = request.all()
       const { token } = await auth.attempt(email, password)
+      const user = await User.findBy('email', email)
+      const profile = await user.profile().fetch()
       return response.json({
         status: 'success',
+        isProfileComplete: (profile && profile.first_name),
         token
       })
     } catch (error) {
@@ -73,7 +76,7 @@ class UserController {
       Logger.info('userProfile', userProfile)
 
       const school = await userProfile.institution().fetch()
-      userProfile.school = school;
+      userProfile.institution = school;
       return response.json({
         status: 'success',
         profile: userProfile
@@ -86,19 +89,35 @@ class UserController {
     }
   }
 
-  async updateProfile ({ request, auth, response }) {
-    // todo check if logged in
+  async createProfile ({ request, auth, response }) {
     try {
-      const { id, firstName, lastName, position, institutionId } = request.all();
-      const profile = await Profile.find(id)
-      profile.merge({
-        first_name: firstName,
-        last_name: lastName,
-        institution_id: institutionId,
-        position,
+      const { firstName, lastName, position, institutionId } = request.all();
+      const profile = new Profile()
+      profile.first_name = firstName
+      profile.last_name = lastName
+      profile.institution_id = institutionId
+      profile.position = position
+      await auth.user.profile().save(profile)
+      return response.json({
+        status: 'success'
       })
-      await profile.save()
+    } catch (error) {
+      return response.status(400).send({
+        status: 'error',
+        error
+      })
+    }
+  }
 
+  async updateProfile ({ request, auth, response }) {
+    try {
+      const { firstName, lastName, position, institutionId } = request.all()
+      const profile = await auth.user.profile().fetch()
+      profile.first_name = firstName
+      profile.last_name = lastName
+      profile.institution_id = institutionId
+      profile.position = position
+      await profile.save()
       return response.json({
         status: 'success'
       })
