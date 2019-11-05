@@ -42,8 +42,8 @@ class UserController {
       const user = await User.findBy('email', email)
       const profile = await user.profile().fetch()
       return response.json({
-        status: 'success',
-        isProfileComplete: (profile && profile.first_name),
+        id: user.id,
+        email: user.email,
         token
       })
     } catch (error) {
@@ -71,18 +71,31 @@ class UserController {
 
   async profile ({ request, auth, response }) {
     try {
-      const user = await auth.user
+      const user = await auth.getUser()
       const userProfile = await user.profile().fetch()
-      Logger.info('userProfile', userProfile)
+      if (!userProfile) {
+        return response.json({
+          id: null,
+          firstName: null,
+          lastName: null,
+          position: null,
+          institution: null
+        })
+      }
 
       const school = await userProfile.institution().fetch()
-      userProfile.institution = school;
       return response.json({
-        status: 'success',
-        profile: userProfile
+        id: userProfile.id,
+        firstName: userProfile.first_name,
+        lastName: userProfile.last_name,
+        position: userProfile.position,
+        institution: {
+          id: school ? school.id : null,
+          name: school ? school.name : null
+        }
       })
     } catch (error) {
-      return response.json({
+      return response.status(400).send({
         status: 'error',
         error
       })
@@ -99,7 +112,8 @@ class UserController {
       profile.position = position
       await auth.user.profile().save(profile)
       return response.json({
-        status: 'success'
+        status: 'success',
+        id: profile.id
       })
     } catch (error) {
       return response.status(400).send({

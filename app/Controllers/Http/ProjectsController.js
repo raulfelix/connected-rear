@@ -5,11 +5,12 @@ const Project = use('App/Models/Project')
 class ProjectsController {
   async create({ auth, request, response }) {
     try {
+      const user = await auth.getUser()
       const { title, description, tags } = request.all()
       const project = new Project()
       project.title = title
       project.description = description
-      project.user_id = auth.user.id 
+      project.user_id = user.id 
       project.start_date = new Date()
       project.end_date = new Date()
       await project.save()
@@ -18,7 +19,7 @@ class ProjectsController {
 
       return response.json({
         status: 'success',
-        project
+        id: project.id
       })
     } catch (error) {
       return response.status(400).json({
