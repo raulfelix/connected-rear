@@ -1,5 +1,6 @@
 'use strict'
 
+const Helpers = use('Helpers')
 const Project = use('App/Models/Project')
 
 class ProjectsController {
@@ -28,6 +29,64 @@ class ProjectsController {
       })
     }
   }
+
+  async createComplete({ auth, request, response }) {
+    try {
+      const user = await auth.getUser()
+      const { title, description, file } = request.all()
+
+      const profilePic = request.file(file.filename, {
+        types: ['image'],
+        size: '2mb'
+      })
+    
+      await profilePic.move(Helpers.tmpPath('uploads'), {
+        overwrite: true
+      })
+    
+      if (!profilePic.moved()) {
+        return profilePic.error()
+      }
+
+      const project = new Project()
+      project.title = title
+      project.description = description
+      project.images = profilePic;
+      await project.save()
+
+      return response.json({
+        status: 'success',
+        project
+      })
+    } catch (error) {
+      return response.status(400).json({
+        status: 'error',
+        error
+      })
+    }
+  }
+
+  async getById({ auth, request, response }) {
+    try {
+      await auth.check()
+      const { id } = request.all()
+      const project = await Project.query()
+        .with('tags')
+        .where('id', id)
+        .fetch()
+      const p = project.rows[0]
+      const res = {
+        project: p
+      }
+      return response.json(res)
+    } catch (error) {
+      return response.status(400).json({
+        status: 'error',
+        error
+      })
+    }
+  }
+
 
   async byUser({ auth, request, response }) {
     try {

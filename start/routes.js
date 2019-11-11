@@ -42,8 +42,9 @@ Route.get('/institution',  'InstitutionController.get')
 // projects
 Route.get('/projects/recent', 'ProjectsController.recent')
 Route.get('/projects/user', 'ProjectsController.byUser').middleware('auth')
+Route.get('/project', 'ProjectsController.getById').middleware('auth')
 Route.post('/project', 'ProjectsController.create').middleware('auth')
-
+Route.post('/project/complete', 'ProjectsController.createComplete').middleware('auth')
 //
 // tags
 Route.get('/tags', 'TagsController.find')
